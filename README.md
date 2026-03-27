@@ -50,19 +50,31 @@ The action **returns a response** with the full vehicle data object. Use `respon
 Triggered by Frigate's `sensor.camera_last_recognized_plate` changing state. The `description` field from the API (e.g. `"Blå Volkswagen Passat"`) is used as the notification message, giving a human-readable summary with no extra templating needed.
 
 ```yaml
-alias: Frigate — nummerplade genkendt
-trigger:
-  - platform: state
-    entity_id: sensor.camera_last_recognized_plate
-action:
+alias: Nummerplade
+description: ""
+triggers:
+  - trigger: state
+    entity_id:
+      - sensor.garage_last_recognized_plate
+      - sensor.hoveddor_last_recognized_plate
+    not_to:
+      - unknown
+      - unavailable
+      - Unknown
+      - None
+      - ""
+conditions: []
+actions:
   - action: motorapi.lookup_vehicle
     data:
-      registration_number: "{{ trigger.to_state.state }}"
+      registration_number: "{{trigger.to_state.state}}"
     response_variable: vehicle
-  - action: notify.mobile_app_my_phone
+  - action: notify.mobile_app_jonas_mobil
     data:
-      title: "Nummerplade genkendt: {{ trigger.to_state.state }}"
-      message: "Der er en {{ vehicle.description }} i indkørslen"
+      message: >-
+        Der er en {{vehicle.description}} i {{ "garagen" if trigger.entity_id ==
+        "sensor.garage_last_recognized_plate" else "indkørslen" }}
+mode: single
 ```
 
 ### Example: Alert when a non-electric car parks at a charger
