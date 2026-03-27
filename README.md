@@ -47,7 +47,7 @@ The action **returns a response** with the full vehicle data object. Use `respon
 
 ### Example: Notify when Frigate recognises a number plate
 
-Triggered by Frigate's `sensor.camera_last_recognized_plate` changing state. The `description` field from the API (e.g. `"Blå Volkswagen Passat"`) is used as the notification message, giving a human-readable summary with no extra templating needed.
+Triggered by Frigate's `sensor.garage_last_recognized_plate` or `sensor.hoveddor_last_recognized_plate` changing state. The `description` field from the API (e.g. `"Blå Volkswagen Passat"`) is used as the notification message, giving a human-readable summary with no extra templating needed.
 
 ```yaml
 alias: Nummerplade
