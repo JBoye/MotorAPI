@@ -1,0 +1,59 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Opsæt Motor API",
+        "description": "Indtast din API-nøgle fra [v1.motorapi.dk]({api_url}).",
+        "data": {
+          "api_key": "API-nøgle"
+        },
+        "data_description": {
+          "api_key": "Dit personlige X-AUTH-TOKEN fra motorapi.dk"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ugyldig API-nøgle — kontrollér dit token på motorapi.dk.",
+      "cannot_connect": "Kunne ikke oprette forbindelse til Motor API. Kontrollér din netværksforbindelse.",
+      "timeout": "Anmodningen fik timeout. Prøv igen."
+    },
+    "abort": {
+      "already_configured": "Motor API er allerede konfigureret."
+    }
+  },
+  "services": {
+    "lookup_vehicle": {
+      "name": "Slå køretøj op",
+      "description": "Henter fulde køretøjsoplysninger fra det danske Motor API ud fra registreringsnummeret. Returnerer alle data som en svarsvariabel.",
+      "fields": {
+        "registration_number": {
+          "name": "Registreringsnummer",
+          "description": "Det danske registreringsnummer (nummerplade), f.eks. AB12345."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "empty_registration_number": {
+      "message": "Registreringsnummeret må ikke være tomt."
+    },
+    "vehicle_not_found": {
+      "message": "Intet køretøj fundet for registreringsnummeret '{registration_number}'."
+    },
+    "invalid_auth": {
+      "message": "Den konfigurerede API-nøgle blev afvist. Genopsæt integrationen med en gyldig nøgle."
+    },
+    "rate_limited": {
+      "message": "Motor API's daglige kvote er opbrugt. Prøv igen i morgen."
+    },
+    "api_error": {
+      "message": "Motor API returnerede en uventet fejl (HTTP {status})."
+    },
+    "cannot_connect": {
+      "message": "Kunne ikke oprette forbindelse til Motor API. Kontrollér dit netværk."
+    },
+    "timeout": {
+      "message": "Anmodningen til Motor API fik timeout."
+    }
+  }
+}

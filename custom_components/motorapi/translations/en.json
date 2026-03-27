@@ -1,0 +1,59 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Motor API",
+        "description": "Enter your API key from [v1.motorapi.dk]({api_url}).",
+        "data": {
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "api_key": "Your personal X-AUTH-TOKEN from motorapi.dk"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid API key — please check your token at motorapi.dk.",
+      "cannot_connect": "Could not reach the Motor API. Check your network connection.",
+      "timeout": "The request timed out. Try again."
+    },
+    "abort": {
+      "already_configured": "Motor API is already configured."
+    }
+  },
+  "services": {
+    "lookup_vehicle": {
+      "name": "Look up vehicle",
+      "description": "Fetches full vehicle details from the Danish Motor API by registration number. Returns the full data as a response variable.",
+      "fields": {
+        "registration_number": {
+          "name": "Registration number",
+          "description": "The Danish vehicle registration (number plate), e.g. AB12345."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "empty_registration_number": {
+      "message": "Registration number cannot be empty."
+    },
+    "vehicle_not_found": {
+      "message": "No vehicle found for registration number '{registration_number}'."
+    },
+    "invalid_auth": {
+      "message": "The configured API key was rejected. Re-configure the integration with a valid key."
+    },
+    "rate_limited": {
+      "message": "Motor API daily quota exceeded. Try again tomorrow."
+    },
+    "api_error": {
+      "message": "Motor API returned an unexpected error (HTTP {status})."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to Motor API. Check your network."
+    },
+    "timeout": {
+      "message": "The request to Motor API timed out."
+    }
+  }
+}

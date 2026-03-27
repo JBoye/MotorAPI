@@ -1,0 +1,12 @@
+{
+  "domain": "motorapi",
+  "name": "Motor API",
+  "version": "1.0.0",
+  "documentation": "https://github.com/JBoye/ha-motorapi",
+  "issue_tracker": "https://github.com/JBoye/ha-motorapi/issues",
+  "requirements": [],
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "codeowners": ["@JBoye"],
+  "integration_type": "service"
+}
