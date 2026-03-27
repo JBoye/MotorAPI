@@ -17,7 +17,7 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration that expos
 ## Installation via HACS
 
 1. Open **HACS** → **Integrations** → ⋮ menu → **Custom repositories**
-2. Add `https://github.com/JBoye/ha-motorapi` as category **Integration**
+2. Add `https://github.com/JBoye/MotorAPI` as category **Integration**
 3. Search for **Motor API** and install
 4. Restart Home Assistant
 
@@ -45,64 +45,93 @@ Copy the `custom_components/motorapi/` folder into your HA config's `custom_comp
 
 The action **returns a response** with the full vehicle data object. Use `response_variable` in scripts/automations to capture it.
 
-### Example: Script with response variable
+### Example: Notify when Frigate recognises a number plate
+
+Triggered by Frigate's `sensor.camera_last_recognized_plate` changing state. The `description` field from the API (e.g. `"Blå Volkswagen Passat"`) is used as the notification message, giving a human-readable summary with no extra templating needed.
 
 ```yaml
-sequence:
-  - action: motorapi.lookup_vehicle
-    data:
-      registration_number: "AB12345"
-    response_variable: vehicle
-
-  - if:
-      - condition: template
-        value_template: "{{ vehicle.fuel_type == 'El' }}"
-    then:
-      - action: notify.mobile_app_my_phone
-        data:
-          message: "{{ vehicle.make }} {{ vehicle.model }} er elektrisk 🔋"
-    else:
-      - action: notify.mobile_app_my_phone
-        data:
-          message: >
-            {{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.fuel_type }}).
-            Næste syn: {{ vehicle.mot_info.next_inspection_date }}
-```
-
-### Example: Automation trigger with response
-
-```yaml
-alias: Tjek køretøj ved ankomst
+alias: Frigate — nummerplade genkendt
 trigger:
   - platform: state
-    entity_id: input_text.gæstens_nummerplade
-    to: ~
+    entity_id: sensor.camera_last_recognized_plate
 action:
   - action: motorapi.lookup_vehicle
     data:
       registration_number: "{{ trigger.to_state.state }}"
     response_variable: vehicle
-  - action: notify.persistent_notification
+  - action: notify.mobile_app_my_phone
     data:
-      title: "Køretøjsoplysninger"
-      message: >
-        {{ vehicle.make }} {{ vehicle.model }} {{ vehicle.variant }}
-        Farve: {{ vehicle.color }}
-        Brændstof: {{ vehicle.fuel_type }}
-        Syn: {{ vehicle.mot_info.result }} — næste: {{ vehicle.mot_info.next_inspection_date }}
+      title: "Nummerplade genkendt: {{ trigger.to_state.state }}"
+      message: "Der er en {{ vehicle.description }} i indkørslen"
+```
+
+### Example: Alert when a non-electric car parks at a charger
+
+Looks up the plate when a charger becomes occupied and notifies if the vehicle is not electric — useful for managing access to EV charging spots.
+
+```yaml
+alias: Ikke-elbil ved lader
+trigger:
+  - platform: state
+    entity_id: binary_sensor.charger_occupied
+    to: "on"
+action:
+  - action: motorapi.lookup_vehicle
+    data:
+      registration_number: "{{ states('sensor.charger_last_plate') }}"
+    response_variable: vehicle
+  - if:
+      - condition: template
+        value_template: "{{ vehicle.fuel_type != 'El' }}"
+    then:
+      - action: notify.mobile_app_my_phone
+        data:
+          title: "Ikke-elbil ved lader"
+          message: >
+            {{ vehicle.description }} ({{ vehicle.fuel_type }}) holder ved laderen.
+            Nummerplade: {{ vehicle.registration_number }}
+```
+
+### Example: Alert when vehicle inspection is due soon
+
+Checks the upcoming inspection date when a plate is scanned and sends a notification if the MOT expires within 30 days — useful for fleet management or keeping track of your own vehicles.
+
+```yaml
+alias: Syn snart udløber
+trigger:
+  - platform: state
+    entity_id: sensor.camera_last_recognized_plate
+action:
+  - action: motorapi.lookup_vehicle
+    data:
+      registration_number: "{{ trigger.to_state.state }}"
+    response_variable: vehicle
+  - if:
+      - condition: template
+        value_template: >
+          {{ vehicle.mot_info.next_inspection_date is not none and
+             (as_timestamp(vehicle.mot_info.next_inspection_date) - as_timestamp(now())) < 86400 * 30 }}
+    then:
+      - action: notify.mobile_app_my_phone
+        data:
+          title: "Syn udløber snart"
+          message: >
+            {{ vehicle.description }} ({{ vehicle.registration_number }}) skal til syn
+            senest {{ vehicle.mot_info.next_inspection_date }}.
+            Sidst godkendt: {{ vehicle.mot_info.date }}, km-stand: {{ vehicle.mot_info.mileage }}.
 ```
 
 ### Full response schema
 
 ```json
 {
-  "registration_number": "DD97767",
+  "registration_number": "XX88888",
   "status": "Registreret",
-  "status_date": "2021-10-20T09:56:17.000+02:00",
+  "status_date": "2020-01-01T00:00:00.000+01:00",
   "type": "Personbil",
   "use": "Privat personkørsel",
-  "first_registration": "2016-04-12+02:00",
-  "vin": "WVWZZZ3CZGE193129",
+  "first_registration": "2018-06-01+02:00",
+  "vin": "WAUZZZ000XX000000",
   "own_weight": null,
   "cerb_weight": 1876,
   "total_weight": 2250,
@@ -124,22 +153,23 @@ action:
   "engine_volume": 1395,
   "engine_power": 115,
   "fuel_type": "Benzin",
-  "is_hybrid": false,
+  "is_hybrid": true,
   "hybrid_type": "mild",
   "registration_zipcode": "",
-  "vehicle_id": 9000000004225773,
+  "vehicle_id": 1000000000000001,
   "mot_info": {
     "type": "PeriodiskSyn",
-    "date": "2025-10-06",
+    "date": "2024-06-01",
     "result": "Godkendt",
     "status": "Aktiv",
-    "status_date": "2025-10-06",
-    "mileage": 165000,
-    "next_inspection_date": "2027-10-06"
+    "status_date": "2024-06-01",
+    "mileage": 80000,
+    "next_inspection_date": "2028-01-01"
   },
   "is_leasing": false,
   "leasing_from": null,
-  "leasing_to": null
+  "leasing_to": null,
+  "description": "Blå Volkswagen Passat"
 }
 ```
 
